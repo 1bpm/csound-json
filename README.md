@@ -18,6 +18,8 @@ Simple key/index access is available, as are more powerful query expressions usi
 Create a build directory at the top of the source tree, execute *cmake ..*, *make* and optionally *make install* as root. If the latter is not used/possible then the resulting library can be used with the *--opcode-lib* flag in Csound.
 eg:
 
+    git clone https://git.1bpm.net/csound-json
+	cd csound-json
 	mkdir build && cd build
 	cmake ..
 	make && sudo make install
