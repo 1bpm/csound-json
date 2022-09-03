@@ -1,7 +1,10 @@
 /*
     csound-json example 5
 
-    fill JSON object with various data at init time
+    fill JSON object with various data at k-rate and init time
+        add to an object loaded from disk
+        add f-table to JSON
+        print and save to disk
 
 */
 <CsoundSynthesizer>
@@ -34,10 +37,16 @@ endop
 
 
 instr boot
+
+    ; empty objects
     iJson1 jsoninit
     iJson2 jsoninit
+
+    ; fill with data
     schedule "run1", 0, 5, iJson1
     schedule "run2", 5, 5, iJson2
+
+    ; combine objects
     schedule "process", 10, 1, iJson1, iJson2
     turnoff
 endin
