@@ -219,17 +219,6 @@ Perform a JSONPath query and obtain the resulting JSON object handle.
 * **Spath** JSONPath expression
 
 
-### jsonpathrplval
-Replace a value in a location specified by the JSONPath expression *Spath*
-
-	jsonpathrplval iJson, Spath, ivalue
-	jsonpathrplval iJson, Spath, Svalue
-* **iJson** JSON object handle to evaluate
-* **Spath** JSONPath expression
-* **ivalue** numeric value to replace target with
-* **Svalue** string value to replace target with
-
-
 ### jsonpathrplvalk
 Replace a value in a location specified by the JSONPath expression *Spath* at k-rate.
 

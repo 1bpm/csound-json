@@ -625,7 +625,7 @@ struct jsonpathrplvalNumericK : jsonpathrplvalNumericBase {
 
 /*
  Replace element with object by JSONPath
- */
+ NOT SUPPORTED
 struct jsonpathrpl : inplug<3> {
 	INPLUGINIT("iSi")
 	void irun() {
@@ -634,11 +634,11 @@ struct jsonpathrpl : inplug<3> {
         jsoncons::jsonpath::json_replace(
             jsonSession->data, 
             std::string(args.str_data(1).data), 
-            std::string("DAMN") //jsonSession2->data
+            jsonSession2->data
         );
 	}
 };
-
+*/
 
 /*
  Query by JSON Pointer
@@ -980,7 +980,7 @@ void csnd::on_load(csnd::Csound *csound) {
     csnd::plugin<jsonpathrplvalStringK>(csound, "jsonpathrplvalk.S", csnd::thread::ik);
     csnd::plugin<jsonpathrplvalNumeric>(csound, "jsonpathrplval.i", csnd::thread::i);
     csnd::plugin<jsonpathrplvalNumericK>(csound, "jsonpathrplvalk.i", csnd::thread::ik);
-    csnd::plugin<jsonpathrpl>(csound, "jsonpathrpl", csnd::thread::i);
+//    csnd::plugin<jsonpathrpl>(csound, "jsonpathrpl", csnd::thread::i);
     
     csnd::plugin<jsonptr>(csound, "jsonptr", csnd::thread::i);
     csnd::plugin<jsonptrhas>(csound, "jsonptrhas", csnd::thread::i);
