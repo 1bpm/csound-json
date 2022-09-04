@@ -32,6 +32,7 @@ Some examples are provided in the examples directory.
 
 ## Opcode reference
 
+
 ### jsonloads
 Parse a JSON string and load to an object handle for use in other opcodes.
 
@@ -74,11 +75,19 @@ Output a JSON object handle to a text file.
 * **Sfile** file path to write serialised object contents to
 * **ipretty** 1=pretty print with formatting and indenting, 0=raw
 
+
 ### jsoninit
 Initialise an empty JSON object (equivalent to `iJson jsonloads "{}"`).
 
 	iJson jsoninit
 * **iJson** new empty object
+
+
+### jsondestroy
+Delete a JSON object and free memory.
+
+	jsondestroy iJson
+* **iJson** JSON object handle to destroy
 
 
 ### jsonmerge
@@ -288,6 +297,7 @@ Add a value at a location specified by the JSON Pointer expression *Spointer*.
 * **Spointer** JSON Pointer expression
 * **kvalue** numeric value to add
 * **Svalue** string value to add
+
 
 ### jsonptradd
 Add a JSON object handle to a location specified by the JSON Pointer expression *Spointer*.

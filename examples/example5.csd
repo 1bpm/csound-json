@@ -15,6 +15,7 @@
 <CsOptions>
 -d
 -m0
+-odac
 </CsOptions>
 <CsInstruments>
 sr = 44100
@@ -115,7 +116,7 @@ endin
    
 </CsInstruments>
 <CsScore>
-f1 0 64 10 1    ; sine
+f1 0 16 10 1    ; sine
 i"boot" 0 15
 </CsScore>
 </CsoundSynthesizer>

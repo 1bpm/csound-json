@@ -30,13 +30,15 @@
 
 #define ARGT static constexpr char const
 
-struct JSONSession {
-    jsoncons::json data;
-};
 
 const char* badHandle = "cannot obtain data from handle";
+const char* deadHandle = "object has been destroyed";
 const char* handleName = "jsonsession";
 
+struct JSONSession {
+    jsoncons::json data;
+    bool active;
+};
 
 /*
     Initialise an array and return STRINDAT pointer in case it is required
@@ -132,11 +134,13 @@ int getJsonType(JSONSession* jsonSession) {
         if (!(jsonSession = getHandle<JSONSession>(csound, idInArgs[0], handleName))) {\
 			throw std::runtime_error(badHandle);\
 		}\
+        if (!jsonSession->active) throw std::runtime_error(deadHandle);\
     }\
 	void getSession(MYFLT handle, JSONSession** returnSession) {\
 		if (!(*returnSession = getHandle<JSONSession>(csound, handle, handleName))) {\
 			throw std::runtime_error(badHandle);\
 		}\
+        if (!jsonSession->active) throw std::runtime_error(deadHandle);\
 	}
 
 #define _PLUGINITBASE(votypes, vitypes, doGetSession) \
@@ -224,6 +228,7 @@ struct jsonloads : plugin<1, 1> {
 	PLUGINIT("i", "S", false)
 	void irun() {
         outargs[0] = createHandle<JSONSession>(csound, &jsonSession, handleName);
+        jsonSession->active = true;
         jsonSession->data = jsoncons::json::parse(std::string(inargs.str_data(0).data));
 	}
 };
@@ -236,6 +241,7 @@ struct jsoninit : plugin<1, 0> {
 	PLUGINIT("i", "", false)
 	void irun() {
         outargs[0] = createHandle<JSONSession>(csound, &jsonSession, handleName);
+        jsonSession->active = true;
         jsonSession->data = jsoncons::json::parse("{}");
 	}
 };
@@ -539,6 +545,7 @@ struct jsongetvalString : plugin<1, 2> {
         jsoncons::json selected = jsonSession->data[std::string(input.data)];
         JSONSession* jsonSessionOutput;
         outargs[0] = createHandle<JSONSession>(csound, &jsonSessionOutput, handleName);
+        jsonSessionOutput->active = true;
         jsonSessionOutput->data = selected;
     }
 };
@@ -553,6 +560,7 @@ struct jsongetvalNumeric : plugin<1, 2> {
         jsoncons::json selected = jsonSession->data[(int) inargs[1]];
         JSONSession* jsonSessionOutput;
         outargs[0] = createHandle<JSONSession>(csound, &jsonSessionOutput, handleName);
+        jsonSessionOutput->active = true;
         jsonSessionOutput->data = selected;
     }
 };
@@ -569,6 +577,7 @@ struct jsonpath : plugin<1, 2> {
         );
         JSONSession* jsonSessionOutput;
         outargs[0] = createHandle<JSONSession>(csound, &jsonSessionOutput, handleName);
+        jsonSessionOutput->active = true;
         jsonSessionOutput->data = queried;
     }
 };
@@ -642,6 +651,7 @@ struct jsonptr : plugin<1, 2> {
         );
         JSONSession* jsonSessionOutput;
         outargs[0] = createHandle<JSONSession>(csound, &jsonSessionOutput, handleName);
+        jsonSessionOutput->active = true;
         jsonSessionOutput->data = queried;
     }
 };
@@ -850,6 +860,7 @@ struct jsonarr : plugin<1, 1> {
         MYFLT handle;
         for (std::size_t index = 0; index < vals.size(); index++) {
             handle = createHandle<JSONSession>(csound, &jsonSession2, handleName);
+            jsonSession2->active = true;
             jsonSession2->data = vals[index];
             array->data[index] = handle;
         }
@@ -882,20 +893,37 @@ struct jsondumpsK : jsondumpsBase {
 };
 
 
-struct jsonload : csnd::Plugin<1, 1> {
-    PLUGINSESSION
+/*
+ Destroy object and clear memory
+ */
+struct jsondestroy : inplug<1> {
+    INPLUGINIT("i")
+    void irun() {
+        jsonSession->data.~basic_json();
+        jsonSession->active = false;
+    }
+};
+
+
+/*
+ Load from file
+ */
+struct jsonload : plugin<1, 1> {
 	PLUGINIT("i", "S", false)
 	void irun() {
         std::ifstream fileStream(inargs.str_data(0).data);
         jsoncons::json parsed = jsoncons::json::parse(fileStream);
         outargs[0] = createHandle<JSONSession>(csound, &jsonSession, handleName);
+        jsonSession->active = true;
         jsonSession->data = parsed;
 	}
 };
 
 
-struct jsondump : csnd::InPlug<3> {
-    INPLUGSESSION
+/*
+ Serialise to file
+ */
+struct jsondump : inplug<3> {
 	INPLUGINIT("iSp")
 	void irun() {
         std::ofstream fileStream;
@@ -912,11 +940,13 @@ struct jsondump : csnd::InPlug<3> {
 	}
 };
 
+
 #include <modload.h>
 void csnd::on_load(csnd::Csound *csound) {
     csnd::plugin<jsoninit>(csound, "jsoninit", csnd::thread::i);
     csnd::plugin<jsonloads>(csound, "jsonloads", csnd::thread::i);
     csnd::plugin<jsondumps>(csound, "jsondumps", csnd::thread::i);
+    csnd::plugin<jsondestroy>(csound, "jsondestroy", csnd::thread::i);
     csnd::plugin<jsondumpsK>(csound, "jsondumpsk", csnd::thread::ik);
     csnd::plugin<jsonload>(csound, "jsonload", csnd::thread::i);
     csnd::plugin<jsondump>(csound, "jsondump", csnd::thread::i);
