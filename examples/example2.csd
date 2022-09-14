@@ -50,8 +50,8 @@ instr boot
     iJsupplement jsonload "supplement.json"
 
     ; get the instruments objects and merge them
-    iJinstrs1 jsongetval iJbase, "instruments"
-    iJinstrs2 jsongetval iJsupplement, "instruments"
+    iJinstrs1 jsonget iJbase, "instruments"
+    iJinstrs2 jsonget iJsupplement, "instruments"
     jsonmerge iJinstrs1, iJinstrs2, 1
     
     ; get keys of the resulting instruments
@@ -63,7 +63,7 @@ instr boot
         Sinstrument = Skeys[indexi]
 
         ; get the relevant instrument object
-        iJscore jsongetval iJinstrs1, Sinstrument
+        iJscore jsonget iJinstrs1, Sinstrument
 
         ; score items are retrieved as handles to JSON arrays, in a Csound array
         iJscorelines[] jsonarr iJscore

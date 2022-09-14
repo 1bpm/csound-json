@@ -538,7 +538,7 @@ struct jsonsizeK : jsonsizeBase {
 /*
  Get object from an object by key name
  */
-struct jsongetvalString : plugin<1, 2> {
+struct jsongetString : plugin<1, 2> {
     PLUGINIT("i", "iS", true)
     void irun() {
         STRINGDAT &input = inargs.str_data(1);
@@ -554,7 +554,7 @@ struct jsongetvalString : plugin<1, 2> {
 /*
  Get object from an array by index
  */
-struct jsongetvalNumeric : plugin<1, 2> {
+struct jsongetNumeric : plugin<1, 2> {
     PLUGINIT("i", "ii", true)
     void irun() {
         jsoncons::json selected = jsonSession->data[(int) inargs[1]];
@@ -955,8 +955,8 @@ void csnd::on_load(csnd::Csound *csound) {
     csnd::plugin<jsontypeString>(csound, "jsontype.S", csnd::thread::i);
     csnd::plugin<jsonkeys>(csound, "jsonkeys", csnd::thread::i);
     csnd::plugin<jsonkeysK>(csound, "jsonkeysk", csnd::thread::ik);
-    csnd::plugin<jsongetvalString>(csound, "jsongetval.S", csnd::thread::i);
-    csnd::plugin<jsongetvalNumeric>(csound, "jsongetval.i", csnd::thread::i);
+    csnd::plugin<jsongetString>(csound, "jsonget.S", csnd::thread::i);
+    csnd::plugin<jsongetNumeric>(csound, "jsonget.i", csnd::thread::i);
     csnd::plugin<jsonsize>(csound, "jsonsize", csnd::thread::i);
     csnd::plugin<jsonsizeK>(csound, "jsonsizek", csnd::thread::ik);
   
