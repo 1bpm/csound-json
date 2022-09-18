@@ -50,4 +50,13 @@ MYFLT createHandle(csnd::Csound* csound, T** data, const char* name) {
     return FL(handle);
 }
 
+/*
+ * Destroy global object
+ */
+void destroyHandle(csnd::Csound* csound, MYFLT handle, const char* name) {
+    char buffer[32];
+    snprintf(buffer, 32, handleIdentifier, name, (int)handle);
+    csound->destroy_global_variable(buffer);
+}
+
 

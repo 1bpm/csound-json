@@ -210,6 +210,34 @@ Get a JSON object handle of the object contained in the specified key or index.
 * **index** index for accessing an array
 
 
+### jsongetval
+Get a numeric or string value from an object by string key or numeric index.
+
+    Svalue jsongetval iJson, Skey
+    ivalue jsongetval iJson, Skey
+    Svalue jsongetval iJson, index
+    ivalue jsongetval iJson, index
+* **Svalue** string value returned
+* **ivalue** numeric value returned
+* **iJson** JSON object handle to evaluate
+* **Skey** key for accessing an object
+* **index** index for accessing an array
+
+
+## jsongetvalk
+Get a numeric or string value from an object by string key or numeric index, at k-rate.
+
+    Svalue jsongetvalk iJson, Skey
+    kvalue jsongetvalk iJson, Skey
+    Svalue jsongetvalk iJson, kindex
+    kvalue jsongetvalk iJson, kindex
+* **Svalue** string value returned
+* **kvalue** numeric value returned
+* **iJson** JSON object handle to evaluate
+* **Skey** key for accessing an object
+* **kindex** index for accessing an array
+    
+
 ### jsonpath
 Perform a JSONPath query and obtain the resulting JSON object handle.
 

@@ -130,6 +130,23 @@ int getJsonType(JSONSession* jsonSession) {
 
 #define _PLUGINSESSIONBASE(idInArgs)\
     JSONSession* jsonSession;\
+    JSONSession* jsonDeinitSession;\
+    MYFLT handleDeinit;\
+    int deinit() {\
+        if (jsonDeinitSession != nullptr && jsonDeinitSession->active) {\
+            jsonSession->data.~basic_json();\
+            jsonSession->active = false;\
+        }\
+        if (handleDeinit != -1) {\
+            destroyHandle(csound, handleDeinit, handleName);\
+        }\
+        return OK;\
+    }\
+    void registerDeinit(JSONSession* jsonDeinitSession, MYFLT handleDeinit) {\
+        this->jsonDeinitSession = jsonDeinitSession;\
+        this->handleDeinit = handleDeinit;\
+        csound->plugin_deinit(this);\
+    }\
     void getSession() {\
         if (!(jsonSession = getHandle<JSONSession>(csound, idInArgs[0], handleName))) {\
 			throw std::runtime_error(badHandle);\
@@ -147,6 +164,8 @@ int getJsonType(JSONSession* jsonSession) {
 	ARGT* otypes = votypes;\
 	ARGT* itypes = vitypes;\
 	int init() {\
+        jsonDeinitSession = nullptr;\
+        handleDeinit = -1;\
 		try {\
 			if (doGetSession) getSession();\
 			irun();\
@@ -230,6 +249,7 @@ struct jsonloads : plugin<1, 1> {
         outargs[0] = createHandle<JSONSession>(csound, &jsonSession, handleName);
         jsonSession->active = true;
         jsonSession->data = jsoncons::json::parse(std::string(inargs.str_data(0).data));
+        //registerDeinit(jsonSession, outargs[0]);
 	}
 };
 
@@ -243,6 +263,7 @@ struct jsoninit : plugin<1, 0> {
         outargs[0] = createHandle<JSONSession>(csound, &jsonSession, handleName);
         jsonSession->active = true;
         jsonSession->data = jsoncons::json::parse("{}");
+        //registerDeinit(jsonSession, outargs[0]);
 	}
 };
 
@@ -252,7 +273,7 @@ struct jsoninit : plugin<1, 0> {
  */
 struct jsonmerge : inplug<3> {
 	INPLUGINIT("iio")
-	int irun() {        
+	void irun() {        
         JSONSession* jsonSession2;
         getSession(args[1], &jsonSession2);
         if (args[2] == 1) { 
@@ -260,7 +281,6 @@ struct jsonmerge : inplug<3> {
         } else {
             jsonSession->data.merge(jsonSession2->data);
         }
-
 	}
 };
 
@@ -533,6 +553,83 @@ struct jsonsize : jsonsizeBase {
 struct jsonsizeK : jsonsizeBase {
     PLUGINCHILDK("k", "i", true)
 };
+
+
+/*
+ Get string value by string key
+ */
+struct jsongetvalStringStringBase : plugin<1, 2> {
+    void run() {
+        STRINGDAT &input = inargs.str_data(1);
+        STRINGDAT &output = outargs.str_data(0);
+        jsoncons::json selected = jsonSession->data[std::string(input.data)];
+        std::string value = selected.as<std::string>();
+        output.size = value.size();
+        output.data = csound->strdup((char*) value.c_str());
+    }
+};
+struct jsongetvalStringString : jsongetvalStringStringBase {
+    PLUGINCHILD("S", "iS", true)
+};
+struct jsongetvalStringStringK : jsongetvalStringStringBase {
+    PLUGINCHILDK("S", "iS", true)
+};
+
+
+/*
+ Get numeric value by string key
+ */
+struct jsongetvalNumericStringBase : plugin<1, 2> {
+    void run() {
+        STRINGDAT &input = inargs.str_data(1);
+        jsoncons::json selected = jsonSession->data[std::string(input.data)];
+        outargs[0] = selected.as<MYFLT>();
+    }
+};
+struct jsongetvalNumericString : jsongetvalNumericStringBase {
+    PLUGINCHILD("i", "iS", true)
+};
+struct jsongetvalNumericStringK : jsongetvalNumericStringBase {
+    PLUGINCHILDK("k", "iS", true)
+};
+
+
+/*
+ Get string value by numeric index
+ */
+struct jsongetvalStringNumericBase : plugin<1, 2> {
+    void run() {
+        STRINGDAT &output = outargs.str_data(0);
+        jsoncons::json selected = jsonSession->data[(int) inargs[1]];
+        std::string value = selected.as<std::string>();
+        output.size = value.size();
+        output.data = csound->strdup((char*) value.c_str());
+    }
+};
+struct jsongetvalStringNumeric : jsongetvalStringNumericBase {
+    PLUGINCHILD("S", "ii", true)
+};
+struct jsongetvalStringNumericK : jsongetvalStringNumericBase {
+    PLUGINCHILDK("S", "ik", true)
+};
+
+
+/*
+ Get numeric value by numeric index
+ */
+struct jsongetvalNumericNumericBase : plugin<1, 2> {
+    void run() {
+        jsoncons::json selected = jsonSession->data[(int) inargs[1]];
+        outargs[0] = selected.as<MYFLT>();
+    }
+};
+struct jsongetvalNumericNumeric : jsongetvalNumericNumericBase {
+    PLUGINCHILD("i", "ii", true)
+};
+struct jsongetvalNumericNumericK : jsongetvalNumericNumericBase {
+    PLUGINCHILDK("k", "ik", true)
+};
+
 
 
 /*
@@ -957,6 +1054,16 @@ void csnd::on_load(csnd::Csound *csound) {
     csnd::plugin<jsonkeysK>(csound, "jsonkeysk", csnd::thread::ik);
     csnd::plugin<jsongetString>(csound, "jsonget.S", csnd::thread::i);
     csnd::plugin<jsongetNumeric>(csound, "jsonget.i", csnd::thread::i);
+    
+    csnd::plugin<jsongetvalStringString>(csound, "jsongetval.SS", csnd::thread::i);
+    csnd::plugin<jsongetvalNumericString>(csound, "jsongetval.iS", csnd::thread::i);
+    csnd::plugin<jsongetvalStringNumeric>(csound, "jsongetval.Si", csnd::thread::i);
+    csnd::plugin<jsongetvalNumericNumeric>(csound, "jsongetval.ii", csnd::thread::i);
+    csnd::plugin<jsongetvalStringStringK>(csound, "jsongetvalk.SS", csnd::thread::ik);
+    csnd::plugin<jsongetvalNumericStringK>(csound, "jsongetvalk.kS", csnd::thread::ik);
+    csnd::plugin<jsongetvalStringNumericK>(csound, "jsongetvalk.Sk", csnd::thread::ik);
+    csnd::plugin<jsongetvalNumericNumericK>(csound, "jsongetvalk.kk", csnd::thread::ik);
+    
     csnd::plugin<jsonsize>(csound, "jsonsize", csnd::thread::i);
     csnd::plugin<jsonsizeK>(csound, "jsonsizek", csnd::thread::ik);
   
