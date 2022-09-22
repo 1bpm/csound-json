@@ -224,7 +224,7 @@ Get a numeric or string value from an object by string key or numeric index.
 * **index** index for accessing an array
 
 
-## jsongetvalk
+### jsongetvalk
 Get a numeric or string value from an object by string key or numeric index, at k-rate.
 
     Svalue jsongetvalk iJson, Skey
@@ -274,6 +274,45 @@ Perform a JSON Pointer query and obtain the resulting JSON object handle.
 
 	iJsonOutput jsonptr iJson, Spointer
 * **iJsonOutput** JSON object handle specified by *Spointer*
+* **iJson** JSON object handle to evaluate
+* **Spointer** JSON Pointer expression
+
+
+### jsonptrval
+Use a JSON Pointer query to obtain a string/numeric value, or an array of string/numeric.
+
+    ivalue jsonptrval iJson, Spointer
+    Svalue jsonptrval iJson, Spointer
+    ivalues[] jsonptrval iJson, Spointer
+    Svalues[] jsonptrval iJson, Spointer
+* **ivalue** numeric output value
+* **Svalue** string output value
+* **ivalues[]** numeric array output values
+* **Svalues[]** string array output values
+* **iJson** JSON object handle to evaluate
+* **Spointer** JSON Pointer expression
+
+
+### jsonptrvalk
+Use a JSON Pointer query to obtain a string/numeric value, or an array of string/numeric, at k-rate.
+
+    kvalue jsonptrvalk iJson, Spointer
+    Svalue jsonptrvalk iJson, Spointer
+    kvalues[] jsonptrvalk iJson, Spointer
+    Svalues[] jsonptrvalk iJson, Spointer
+* **kvalue** numeric output value
+* **Svalue** string output value
+* **kvalues[]** numeric array output values
+* **Svalues[]** string array output values
+* **iJson** JSON object handle to evaluate
+* **Spointer** JSON Pointer expression
+
+
+### jsonptrarr
+Get an array of JSON object handles from a JSON Pointer query.
+
+	iJsonObjects[] jsonptrarr iJson, Spointer
+* **iJsonObjects[]** array of JSON object handles
 * **iJson** JSON object handle to evaluate
 * **Spointer** JSON Pointer expression
 

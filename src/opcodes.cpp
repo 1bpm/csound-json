@@ -753,6 +753,110 @@ struct jsonptr : plugin<1, 2> {
     }
 };
 
+
+/*
+ Get string value by JSON Pointer
+ */
+struct jsonptrvalStringBase : plugin<1, 2> {
+    void run() {
+        STRINGDAT &output = outargs.str_data(0);
+        jsoncons::json queried = jsoncons::jsonpointer::get(
+            jsonSession->data, std::string(inargs.str_data(1).data)
+        );
+        std::string value = queried.as<std::string>();
+        output.size = value.size();
+        output.data = csound->strdup((char*) value.c_str());
+    }
+};
+struct jsonptrvalString : jsonptrvalStringBase {
+	PLUGINCHILD("S", "iS", true)
+};
+struct jsonptrvalStringK : jsonptrvalStringBase {
+	PLUGINCHILDK("S", "iS", true)
+};
+
+
+/*
+ Get string array value by JSON Pointer
+ */
+struct jsonptrvalStringArrayBase : plugin<1, 2> {
+    void run() {
+        jsoncons::json queried = jsoncons::jsonpointer::get(
+            jsonSession->data, std::string(inargs.str_data(1).data)
+        );
+        jsonArrayToCSArray(csound, &queried, (ARRAYDAT*) outargs(0), true);
+    }
+};
+struct jsonptrvalStringArray : jsonptrvalStringArrayBase {
+	PLUGINCHILD("S[]", "iS", true)
+};
+struct jsonptrvalStringArrayK : jsonptrvalStringArrayBase {
+	PLUGINCHILDK("S[]", "iS", true)
+};
+
+
+/*
+ Get numeric value by JSON Pointer
+ */
+struct jsonptrvalNumericBase : plugin<1, 2> {
+    void run() {
+        jsoncons::json queried = jsoncons::jsonpointer::get(
+            jsonSession->data, std::string(inargs.str_data(1).data)
+        );
+        outargs[0] = queried.as<MYFLT>();
+    }
+};
+struct jsonptrvalNumeric : jsonptrvalNumericBase {
+	PLUGINCHILD("i", "iS", true)
+};
+struct jsonptrvalNumericK : jsonptrvalNumericBase {
+	PLUGINCHILDK("k", "iS", true)
+};
+
+
+/*
+ Get numeric array value by JSON Pointer
+ */
+struct jsonptrvalNumericArrayBase : plugin<1, 2> {
+    void run() {
+        jsoncons::json queried = jsoncons::jsonpointer::get(
+            jsonSession->data, std::string(inargs.str_data(1).data)
+        );
+        jsonArrayToCSArray(csound, &queried, (ARRAYDAT*) outargs(0), false);
+    }
+};
+struct jsonptrvalNumericArray : jsonptrvalNumericArrayBase {
+	PLUGINCHILD("i[]", "iS", true)
+};
+struct jsonptrvalNumericArrayK : jsonptrvalNumericArrayBase {
+	PLUGINCHILDK("k[]", "iS", true)
+};
+
+
+/*
+ Get numeric array value by JSON Pointer
+ */
+struct jsonptrarr : plugin<1, 2> {
+    PLUGINIT("i[]", "iS", true)
+    void irun() {
+        JSONSession* jsonSession2;
+        jsoncons::json queried = jsoncons::jsonpointer::get(
+            jsonSession->data, std::string(inargs.str_data(1).data)
+        );
+        std::vector<jsoncons::json> vals = queried.as<std::vector<jsoncons::json>>();
+        ARRAYDAT* array = (ARRAYDAT*) outargs(0);
+        arrayInit(csound, array, vals.size(), 1);
+        MYFLT handle;
+        for (std::size_t index = 0; index < vals.size(); index++) {
+            handle = createHandle<JSONSession>(csound, &jsonSession2, handleName);
+            jsonSession2->active = true;
+            jsonSession2->data = vals[index];
+            array->data[index] = handle;
+        }
+    }
+};
+
+
 /*
  Check for existence by JSON Pointer
  */
@@ -820,7 +924,7 @@ struct jsonptradd : inplug<3> {
 	INPLUGINIT("iSi")
 	void irun() {
         JSONSession* jsonSession2;
-        getSession(args[1], &jsonSession2);
+        getSession(args[2], &jsonSession2);
         
         jsoncons::jsonpointer::add(
             jsonSession->data, 
@@ -1090,6 +1194,18 @@ void csnd::on_load(csnd::Csound *csound) {
 //    csnd::plugin<jsonpathrpl>(csound, "jsonpathrpl", csnd::thread::i);
     
     csnd::plugin<jsonptr>(csound, "jsonptr", csnd::thread::i);
+    
+    csnd::plugin<jsonptrarr>(csound, "jsonptrarr", csnd::thread::i);
+    
+    csnd::plugin<jsonptrvalStringArray>(csound, "jsonptrval.Sa", csnd::thread::i);
+    csnd::plugin<jsonptrvalStringArrayK>(csound, "jsonptrval.Sak", csnd::thread::i);
+    csnd::plugin<jsonptrvalString>(csound, "jsonptrval.S", csnd::thread::i);
+    csnd::plugin<jsonptrvalStringK>(csound, "jsonptrval.Sk", csnd::thread::i);
+    csnd::plugin<jsonptrvalNumeric>(csound, "jsonptrval.i", csnd::thread::i);
+    csnd::plugin<jsonptrvalNumericK>(csound, "jsonptrval.k", csnd::thread::i);
+    csnd::plugin<jsonptrvalNumericArray>(csound, "jsonptrval.ia", csnd::thread::i);
+    csnd::plugin<jsonptrvalNumericArrayK>(csound, "jsonptrval.ka", csnd::thread::i);
+    
     csnd::plugin<jsonptrhas>(csound, "jsonptrhas", csnd::thread::i);
     csnd::plugin<jsonptrhasK>(csound, "jsonptrhask", csnd::thread::ik);
     csnd::plugin<jsonptraddvalString>(csound, "jsonptraddval.S", csnd::thread::i);
